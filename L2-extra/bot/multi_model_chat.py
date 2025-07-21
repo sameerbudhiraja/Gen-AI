@@ -1,3 +1,4 @@
+# fastAPI --> frontend 
 # Integerating the chat into Full application
 
 """
@@ -111,7 +112,7 @@ app = FastAPI()
 # cors 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Or specify "http://localhost:3000" etc.
+    allow_origins=["http://localhost:5173"],  # your React frontend's origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -147,7 +148,8 @@ def chat(request: ChatRequest):
     google_response = google_chat.send_message(msg)
 
     print("<----------------Response Started---------------->")
-    while True:
+    # while True:
+    for _ in range(10): 
 
         print("Processing---------------->")
 
@@ -177,7 +179,7 @@ def chat(request: ChatRequest):
                 print(open_response)
                 print("Validation Done--------->")
                 google_response = google_chat.send_message(open_response)
-                # continue why continue here ?
+                continue
 
         # display response to end user 
         if parsed['step'] == "display":
@@ -186,5 +188,7 @@ def chat(request: ChatRequest):
 
         # repeat till final result (if not display)
         google_response = google_chat.send_message(parsed['content'])
+
+    return {"error": "Failed to complete reasoning loop"}
 
 print("<----------------Response Complete---------------->")
