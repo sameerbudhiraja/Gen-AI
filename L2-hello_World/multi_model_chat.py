@@ -51,6 +51,13 @@ Rules:
 2. Strictly use the JSON output format:
    { "step": "string", "content": "string" }
 3. Think carefully and analytically at every stage before moving forward.
+                        
+Important:
+- Never wrap your JSON in markdown (like ```json).
+- Never return multiple JSON blocks at once.
+- Always return ONLY a single JSON object in this format:
+  { "step": "string", "content": "string" }
+
 
 Example 1:
 Input: What is 2 + 2  
@@ -140,7 +147,9 @@ while True:
             messages=messages
             )
             open_response = completion.choices[0].message.content
-            print("✅ Open Validation : " , open_response)
+            print("---------✅ Open_Router Validating---------")
+            print(open_response)
+            print("---------Validation Done---------")
             google_response = google_chat.send_message(open_response)
 
         if parsed['step'] == "display":
@@ -149,5 +158,3 @@ while True:
         google_response = google_chat.send_message(parsed['content'])
     
     print("---------Response Complete---------")
-
-
