@@ -1,0 +1,1 @@
+- Can be done Easily using the WebParseLoader provided by the langchain and other tools 
