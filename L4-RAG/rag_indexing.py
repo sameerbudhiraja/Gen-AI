@@ -1,3 +1,5 @@
+# flake8: noqa
+
 # Data Indexing -> Chunking -> Embedding -> V db -> query embedding -> Pick top relevent chunk acc to query 
 # Top chunks + query -> LLM -> Result
 
@@ -15,7 +17,7 @@ load_dotenv()
 
 google_api = os.getenv("GOOGLE_API_KEY")
 
-file_path = "./L4-RAG/JS_File_For_RAG_Practice.pdf"
+file_path = "./JS_File_For_RAG_Practice.pdf"
 loader = PyPDFLoader(file_path= file_path)
 docs = loader.load() # Read File
 # docs[0] Read File Page By Page
@@ -46,7 +48,7 @@ embedding_model = GoogleGenerativeAIEmbeddings(
 vector_store = Qdrant.from_documents(
     documents=split_docs,
     embedding=embedding_model,
-    url="http://localhost:6333",
+    url="http://vector-db:6333",
     collection_name="Learning_Vector_DB_Qdrant"
 )
 

@@ -35,7 +35,7 @@ search_result = vector_DB.similarity_search(
 # context
 context = "\n\n\n-----\n\n\n".join([f"page content : {result.page_content}\n Page Number: {result.metadata['page_label']}\n file location: {result.metadata['source']}" for result in search_result])
 
-# SYS_PROMPT 
+# SYS_PROMPT
 SYSTEM_PROMPT = f"""
 You are a helpful AI assistant that provides accurate answers based on the given context and the user query.
 
