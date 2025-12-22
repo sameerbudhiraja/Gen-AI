@@ -4,11 +4,9 @@ from dotenv import load_dotenv
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from typing_extensions import TypedDict
-from openai import OpenAI
+from langchain_ollama.chat_models import ChatOllama
 
 load_dotenv()
-
-GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # state
 class State(TypedDict):
@@ -25,20 +23,14 @@ def query_check(state: State):
         "If it's coding-related, respond ONLY with 'c'."
     )
 
-    client = OpenAI(
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-        api_key=GOOGLE_API_KEY,
-    )
+    llm = ChatOllama(model="llama3")
 
-    response = client.chat.completions.create(
-        model="gemini-2.0-flash",
-        messages=[
-            {"role": "system", "content": SYS_PROMPT},
-            {"role": "user", "content": state["query"]},
-        ]
-    )
+    response = llm.invoke([
+        {"role": "system", "content": SYS_PROMPT},
+        {"role": "user", "content": state["query"]},
+    ])
 
-    query_type = response.choices[0].message.content.strip().lower()
+    query_type = response.content.strip().lower()
     print(f"Query type: {query_type}")
     state["query_type"] = query_type
     return state
@@ -56,53 +48,38 @@ def route_query(state: State):
 
 
 def general_query(state: State):
-    """Handle general questions using Gemini (fast model)."""
-    client = OpenAI(
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-        api_key=GOOGLE_API_KEY,
-    )
+    """Handle general questions using Ollama."""
+    llm = ChatOllama(model="llama3")
 
-    response = client.chat.completions.create(
-        model="gemini-2.0-flash",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": state["query"]},
-        ]
-    )
+    response = llm.invoke([
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": state["query"]},
+    ])
 
-    answer = response.choices[0].message.content
+    answer = response.content
     print(f"General query response: {answer}")
     state["llm_result"] = answer
     return state
 
 
 def coding_query(state: State):
-    """Use GPT for generating coding answers."""
-    client = OpenAI(
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-        api_key=GOOGLE_API_KEY,
-    )
+    """Use Ollama for generating coding answers."""
+    llm = ChatOllama(model="llama3")
 
-    response = client.chat.completions.create(
-        model="gemini-2.0-flash",
-        messages=[
-            {"role": "system", "content": "You are an expert coding assistant."},
-            {"role": "user", "content": state["query"]},
-        ]
-    )
+    response = llm.invoke([
+        {"role": "system", "content": "You are an expert coding assistant."},
+        {"role": "user", "content": state["query"]},
+    ])
 
-    answer = response.choices[0].message.content
-    print(f"GPT coding response: {answer}")
+    answer = response.content
+    print(f"Coding response: {answer}")
     state["llm_result"] = answer
     return state
 
 
 def coding_validation_query(state: State):
-    """Validate GPT's code output using Gemini."""
-    client = OpenAI(
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-        api_key=GOOGLE_API_KEY,
-    )
+    """Validate code output using Ollama."""
+    llm = ChatOllama(model="llama3")
 
     validation_prompt = (
         "You are a code reviewer. Check the following code or explanation "
@@ -111,12 +88,11 @@ def coding_validation_query(state: State):
         f"Code/Answer:\n{state['llm_result']}"
     )
 
-    response = client.chat.completions.create(
-        model="gemini-2.0-flash",
-        messages=[{"role": "user", "content": validation_prompt}]
-    )
+    response = llm.invoke([
+        {"role": "user", "content": validation_prompt}
+    ])
 
-    validation = response.choices[0].message.content
+    validation = response.content
     print(f"Validation result: {validation}")
     state["llm_result"] += "\n\n✅ Validation Result:\n" + validation
     return state
@@ -145,6 +121,9 @@ graph = graph_builder.compile()
 def main():
     user_query = input("> ")
     initial_state = {"query": user_query, "llm_result": None, "query_type": None}
+    for event in graph.stream(initial_state):
+        print("event", event)
+
     final_state = graph.invoke(initial_state)
     print("\nFinal Answer:\n", final_state["llm_result"])
 
